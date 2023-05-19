@@ -7,7 +7,7 @@ type AttrSelector = { type: 'attr', selector: string, attr: string };
 export type Selector = InnerSelector | OuterSelector | AttrSelector;
 
 export interface Scraper {
-    selector: (selectors: Selector[]) => Promise<string[][]>;
+    selector: (selectors: Selector[]) => Promise<(string | null)[][]>;
 }
 
 export interface ScraperMaker {
@@ -29,7 +29,10 @@ export const createScraper: (pendingPage: Promise<Page>, scrapeUrl: string) => S
                         } else if (browserSelector.type === 'outer') {
                             return nodes.map(node => node.outerHTML);
                         } else if (browserSelector.type === 'attr') {
-                            return nodes.map(node => node.attributes.getNamedItem(browserSelector.attr)!.value);
+                            return nodes.map(node => {
+                                const attr = node.attributes.getNamedItem(browserSelector.attr);
+                                return attr === null ? null : attr.value
+                            });
                         }
                         console.error('Unsupported selector: ', browserSelector);
                         return [];
