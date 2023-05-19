@@ -9,6 +9,7 @@ const scraperMakers: { [rootUrl: string]: ScraperMaker } = {};
 
 app.get('/scrape', async (req, res) => {
     const { rootUrl, scrapeUrl, selector } = req.query as { rootUrl: string, scrapeUrl: string, selector: string };
+    console.log(rootUrl, scrapeUrl, selector);
     if (!scraperMakers[rootUrl]) {
         scraperMakers[rootUrl] = createScraperMaker(rootUrl);
     }
@@ -18,7 +19,7 @@ app.get('/scrape', async (req, res) => {
     if (!scrapers[rootUrl][scrapeUrl]) {
         scrapers[rootUrl][scrapeUrl] = scraperMakers[rootUrl].make(scrapeUrl);
     }
-    const results = await scrapers[rootUrl][scrapeUrl].inner(selector);
+    const results = await scrapers[rootUrl][scrapeUrl].inner(Array.isArray(selector) ? selector : [selector]);
     res.json({
         results
     });

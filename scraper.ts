@@ -1,7 +1,7 @@
 import puppeteer, { Page } from "puppeteer";
 
 export interface Scraper {
-    inner: (selector: string) => Promise<string[]>;
+    inner: (selectors: string[]) => Promise<string[][]>;
 }
 
 export interface ScraperMaker {
@@ -10,16 +10,16 @@ export interface ScraperMaker {
 
 export const createScraper: (pendingPage: Promise<Page>, scrapeUrl: string) => Scraper = (pendingPage, scrapeUrl) => {
     return {
-        inner: async (selector) => {
+        inner: async (selectors) => {
             const page = await pendingPage;
-            const results = await page.evaluate((browserScrapeUrl, browserSelector) => {
+            const results = await page.evaluate((browserScrapeUrl, browserSelectors) => {
                 return fetch(browserScrapeUrl).then(r => r.text()).then(text => {
                     const wrapper = document.createElement('wrapper');
                     wrapper.innerHTML = text;
-                    const nodes = [...wrapper.querySelectorAll(browserSelector)];
-                    return nodes.map(node => node.innerHTML);
+                    const nodesBySelector = browserSelectors.map(browserSelector => [...wrapper.querySelectorAll(browserSelector)]);
+                    return nodesBySelector.map(nodes => nodes.map(node => node.innerHTML));
                 },);
-            }, scrapeUrl, selector);
+            }, scrapeUrl, selectors);
 
             return results;
         }
